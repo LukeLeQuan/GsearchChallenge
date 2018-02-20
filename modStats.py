@@ -193,7 +193,15 @@ class LinearPredictor(mktPredictor):
         dfToPredict[Ylabel] = self.estimateRO(dfToPredict, Xlabels, Ylabel)
         return dfToPredict[Ylabel].as_matrix()
     def estimateRO(self, dfToPredict, Xlabels, Ylabel):
-        return self.estimateROTransformedX(self.pca.transform(self.scaler.transform(dfToPredict[Xlabels]))[:,:self.k])
+        try:
+            transformedX = self.pca.transform(self.scaler.transform(dfToPredict[Xlabels]))
+        except ValueError as err:
+            logging.getLogger(utils.Constants().loggerName).log(logging.INFO, err)
+            logging.getLogger(utils.Constants().loggerName).log(logging.INFO, 'Vector below cannot be projected onto PCA vectors.')
+            logging.getLogger(utils.Constants().loggerName).log(logging.INFO, dfToPredict[Xlabels])
+            return np.full((dfToPredict[Xlabels[0]].count(), 1), np.inf)
+        else:
+            return self.estimateROTransformedX(transformedX[:,:self.k])
     def estimateROTransformedX(self, X):
         return self.regr.predict(X)
 
@@ -319,7 +327,7 @@ class LsumOfFunctionsPredictor(mktPredictor):
     # shortcut if a df object can be passed instead of np array
     def __estimate(self, dfToPredict, Xlabels, Ylabel, createCopy : bool):
         # pointer is only local, so original dataset is not pointing to the copy
-        dfLocal = dfToPredict.copy(deep = True)
+        dfLocal = dfToPredict[[utils.HEADER_DAY, utils.HEADER_STOCK] + Xlabels + [Ylabel]].copy(deep = True)
 
         if len(Xlabels) != len(self.XFunctions):
             raise NameError('LsumOfFunctionsPredictor requires an X vector with the same number of columns than X used for calibration.')
@@ -420,11 +428,11 @@ class PredictorPerSegment(mktPredictor):
     def getX_reduced(self):
         result= np.array([])
         for i in self.XReduced:
-            if isinstance(i, int):
+            if isinstance(i, int) or isinstance(i, np.int32):
                 if not result.size:
-                    result = np.full(i, np.inf)
+                    result = np.full((i, self.getk()), np.inf)
                 else:
-                    result = np.concatenate((result, np.full(i, np.inf)), axis=1)
+                    result = np.concatenate((result, np.full((i, self.getk()), np.inf)), axis=0)
             else:
                 singleXReduced = np.array(i())
                 singleXReduced = np.pad(singleXReduced, ((0, 0), (0, self.getk() - singleXReduced.shape[1])), 'constant', constant_values=np.inf)
