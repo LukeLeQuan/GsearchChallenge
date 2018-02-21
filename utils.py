@@ -19,6 +19,13 @@ TEST_TYPE_K_FOLD = 'KFold'
 TEST_TYPE_REPEATED_K_FOLD = 'RepeatedKFold'
 TEST_TYPE_RANDOM = 'random'
 
+
+LABEL_X_ORIGINAL = '[X]'
+LABEL_X_LINEAR = '[X PCA]'
+LABEL_X_LSUM_OF_FUNCTIONS = '[LF(X) PCA]'
+LABEL_X_LINEAR_PER_STCK = '[X PCA p Stck]'
+LABEL_X_LSUM_OF_FUNCTIONS_PER_STCK = '[LF(X) PCA p Stck]'
+
 ##############################################################################################################################
 ##############################################################################################################################
 ###########################################################  utils ###########################################################
@@ -100,6 +107,10 @@ def parseFile(fileName):
     df = df.drop(df_filtered.index.values)
     df = df.reset_index(drop=True) #to avoid missing rows in the index that cause K-fold to crash
     return df
+
+def getXVectors(columns, regressionType):
+    l = len(regressionType)
+    return [x for x in columns if (x[-l:] == regressionType) and (str.lower(x[0]) == 'x')]
 
 def getTestAndTrainSample():
     random_state = Constants().randomState

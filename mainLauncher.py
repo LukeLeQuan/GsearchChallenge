@@ -9,6 +9,7 @@ import matplotlib.cm as cm
 
 import utils
 import modStats
+import classifiers
 
 ##############################################################################################################################
 ##############################################################################################################################
@@ -82,11 +83,11 @@ def plotPCA(df):
     sample=random.sample(range(np.max(df.count())), 20000)
     # display charts one by one
 
-    XSet = [[(utils.HEADER_X[0], 'X0'), (utils.HEADER_X[1], 'X1')], 
-            [('X0' + modStats.TYPE_LINEAR, 'X0 from PCA'), ('X1' + modStats.TYPE_LINEAR, 'X1 from PCA')], 
-            [('X0' + modStats.TYPE_LSUM_OF_FUNCTIONS, 'X0 from PCA of LF(X)'), ('X1' + modStats.TYPE_LSUM_OF_FUNCTIONS, 'X1 from PCA of LF(X)')], 
-            [('X0' + modStats.TYPE_LINEAR_PER_STCK, 'X0 from PCA per stock'), ('X1' + modStats.TYPE_LINEAR_PER_STCK, 'X1 from PCA per stock')], 
-            [('X0' + modStats.TYPE_LSUM_OF_FUNCTIONS_PER_STCK, 'X0 from PCA of LF(X) per stock'), ('X1' + modStats.TYPE_LSUM_OF_FUNCTIONS_PER_STCK, 'X1 from PCA of LF(X) per stock')]]
+    XSet = [[(utils.HEADER_X[0], utils.LABEL_X_ORIGINAL + '0'), (utils.HEADER_X[1], utils.LABEL_X_ORIGINAL + '1')], 
+            [('x0' + modStats.TYPE_LINEAR, utils.LABEL_X_LINEAR + '0'), ('x1' + modStats.TYPE_LINEAR, utils.LABEL_X_LINEAR + '1')], 
+            [('x0' + modStats.TYPE_LSUM_OF_FUNCTIONS, utils.LABEL_X_LSUM_OF_FUNCTIONS + '0'), ('x1' + modStats.TYPE_LSUM_OF_FUNCTIONS, utils.LABEL_X_LSUM_OF_FUNCTIONS + '1')], 
+            [('x0' + modStats.TYPE_LINEAR_PER_STCK, utils.LABEL_X_LINEAR_PER_STCK + '0'), ('x1' + modStats.TYPE_LINEAR_PER_STCK, utils.LABEL_X_LINEAR_PER_STCK + '1')], 
+            [('x0' + modStats.TYPE_LSUM_OF_FUNCTIONS_PER_STCK, utils.LABEL_X_LSUM_OF_FUNCTIONS_PER_STCK + '0'), ('x1' + modStats.TYPE_LSUM_OF_FUNCTIONS_PER_STCK, utils.LABEL_X_LSUM_OF_FUNCTIONS_PER_STCK + '1')]]
 
     colourLabel = df[utils.HEADER_Y_VARIANCE_GROUP] / 31
     # original problem
@@ -145,6 +146,7 @@ if __name__ == '__main__':
     sourceFileNumber =  1
     performPCA = False # takes time, if false the code will use saved data from a previous run
     utils.Constants().incrementalFunctionFit = True # linear sum of functions will fit functions incrementally if True, independantly if False
+    plotPCAResults = False # plots few charts using PCA results
     
     # chose the file to process
     sourceFile = getSourceFile(sourceFileNumber)
@@ -158,8 +160,10 @@ if __name__ == '__main__':
         # recalls the last file saved post PCA
         df = utils.parseFile(postLinearRegressionProcessingFile)
 
-    plotPCA(df)
-
+    if plotPCAResults:
+        plotPCA(df)
+    
+    classifiers.rateClassifiers(df)
 
 
 

@@ -36,6 +36,13 @@ def forPrediction1():
     DF = pd.DataFrame(data=vect, columns=HEADERS)
     return DF
 
+def sampleColumns():
+    return np.array(['Market', 'Day', 'Stock', 'x0', 'x1', 'x2', 'x3A', 'x3B', 'x3C', 'x3D', 'x3E', 'x4', 'x5', 'x6', 'y', 'Weight', 'yvar', 'yvarGroup',
+       'x0linear', 'x1linear', 'x2linear', 'x3linear', 'x4linear', 'x5linear', 'yprdctlinear', 
+       'x0lsumOfFuncs', 'x1lsumOfFuncs', 'x2lsumOfFuncs', 'x3lsumOfFuncs', 'x4lsumOfFuncs', 'x5lsumOfFuncs', 'x6lsumOfFuncs', 'x7lsumOfFuncs', 'x8lsumOfFuncs', 'x9lsumOfFuncs', 'x10lsumOfFuncs', 'yprdctlsumOfFuncs', 
+       'x0linearPerStock', 'x1linearPerStock', 'x2linearPerStock', 'x3linearPerStock', 'x4linearPerStock', 'x5linearPerStock', 'x6linearPerStock', 'x7linearPerStock', 'x8linearPerStock', 'x9linearPerStock', 'x10linearPerStock', 'yprdctlinearPerStock', 'yrestlinearPerStock',
+       'x0lsumOfFuncsPerStock', 'x1lsumOfFuncsPerStock', 'x2lsumOfFuncsPerStock', 'x3lsumOfFuncsPerStock', 'x4lsumOfFuncsPerStock', 'x5lsumOfFuncsPerStock', 'x6lsumOfFuncsPerStock', 'x7lsumOfFuncsPerStock', 'x8lsumOfFuncsPerStock', 'x9lsumOfFuncsPerStock', 'x10lsumOfFuncsPerStock', 'yprdctlsumOfFuncsPerStock', 'yrestlsumOfFuncsPerStock'])
+
 def testFromFile0():
     sourceFileTrain = 'C:\\Users\\LL\\Desktop\\Work\\Machine learning\\challenge forecast markets\\trainMkt0.csv' # small subset of mkt 1 stocks
     return testFromFile(sourceFileTrain)
@@ -85,7 +92,8 @@ def testRunner():
     testFuncs += [testConstantsGetRandomStateDefault, testConstantsGetTestSamplingRepeatsDefault, testConstantsGetLoggerNameDefault]
     testFuncs += [testConstantsGetNbThreads, testConstantsGetIncrementalFunctionFitDefault, testConstantsGetIncrementalFunctionFitSetToTrue]
     testFuncs += [testTearDown]
-    
+    testFuncs += [testGetXVectors1, testGetXVectors2]
+
     allGood = True
 
     for f in testFuncs:
@@ -134,9 +142,18 @@ def testNanInDF():
     filtered = utils.testNanInDF(DF, HEADER_X)
     return (np.array_equal(filtered.index.values, np.array([59134])), 'testNanInDF returns unexpected list of values for file 1.')
 def testNanInDFTEST1():
-        return (utils.testNanInDF(*emulateFileContent()).empty, 'testNanInDF finds nan where it should not')
+    return (utils.testNanInDF(*emulateFileContent()).empty, 'testNanInDF finds nan where it should not')
 def testNanInDFTEST2():
-        return (not utils.testNanInDF(*emulateFileContentXContainsNaN()).empty, 'testNanInDF does not see nan')
-    
+    return (not utils.testNanInDF(*emulateFileContentXContainsNaN()).empty, 'testNanInDF does not see nan')
+
+def testGetXVectors1():
+    return (np.array_equal(utils.getXVectors(sampleColumns(), 'linear'), 
+                          np.array(['x0linear', 'x1linear', 'x2linear', 'x3linear', 'x4linear', 'x5linear'])), 
+            'getXVector does not return expected list for type linear.')
+def testGetXVectors2():
+    return (np.array_equal(utils.getXVectors(sampleColumns(), 'lsumOfFuncs'), 
+                          np.array(['x0lsumOfFuncs', 'x1lsumOfFuncs', 'x2lsumOfFuncs', 'x3lsumOfFuncs', 'x4lsumOfFuncs', 'x5lsumOfFuncs', 'x6lsumOfFuncs', 'x7lsumOfFuncs', 'x8lsumOfFuncs', 'x9lsumOfFuncs', 'x10lsumOfFuncs'])), 
+            'getXVector does not return expected list for type lsumOfFuncs.')
+
 if __name__ == '__main__':
     testRunner()

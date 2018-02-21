@@ -95,7 +95,7 @@ class mktPredictor:
     def addRegressionData(predictorType, df, addRegressionVectors = False, addRest = False):
         myPredictor = mktPredictor.predictorFactory(predictorType, df, utils.HEADER_X, utils.HEADER_Y, utils.HEADER_WEIGHT, utils.HEADER_MARKET, utils.HEADER_STOCK)
         if addRegressionVectors:
-            df = df.join(pd.DataFrame(data=myPredictor.getX_reduced(), columns=['X' + str(x) + predictorType for x in range(myPredictor.getk())]))
+            df = df.join(pd.DataFrame(data=myPredictor.getX_reduced(), columns=['x' + str(x) + predictorType for x in range(myPredictor.getk())]))
         myPredictor.estimate(df, utils.HEADER_X, utils.HEADER_Y_PREDICT + predictorType)
         if addRest:
             df[utils.HEADER_Y_REST + predictorType] = df[utils.HEADER_Y] - df[utils.HEADER_Y_PREDICT + predictorType]
@@ -403,19 +403,18 @@ class PredictorPerSegment(mktPredictor):
         grouped = df.groupby(groupHeaders)
         self.basePredictors = dict()
         self.avgWeightedSquareDifference = 0
-        self.XReduced = []
+        self.XReduced = pd.DataFrame(np.full((df[Ylabel].count(), len(Xlabels)), np.inf), index = df.index.values)
         # fit a linear estimator per group
         missed = 0
         for name, subdf in grouped:
             try:
                 self.basePredictors[name] = self.__class__.buildBasePredictor(subdf.reset_index(drop=True), Xlabels, Ylabel, Wlabel)
                 self.avgWeightedSquareDifference += self.basePredictors[name].getAvgWeightedSquareDifference() * subdf[Ylabel].count()
-                self.XReduced += [self.basePredictors[name].getX_reduced]
+                self.XReduced.loc[subdf.index, range(self.basePredictors[name].getk())] = self.basePredictors[name].getX_reduced()
             except NameError as err:
                 logging.getLogger(utils.Constants().loggerName).log(logging.INFO, err)
                 logging.getLogger(utils.Constants().loggerName).log(logging.INFO, 'Stock ' + str(name) + ' cannot be regressed with PCA.')
                 missed += subdf[Ylabel].count()
-                self.XReduced += [subdf[Ylabel].count()]
 
         if df[Ylabel].count() > missed:
             self.avgWeightedSquareDifference = self.avgWeightedSquareDifference / (df[Ylabel].count() - missed)
@@ -426,21 +425,7 @@ class PredictorPerSegment(mktPredictor):
     def getAvgWeightedSquareDifference(self):
         return self.avgWeightedSquareDifference
     def getX_reduced(self):
-        result= np.array([])
-        for i in self.XReduced:
-            if isinstance(i, int) or isinstance(i, np.int32):
-                if not result.size:
-                    result = np.full((i, self.getk()), np.inf)
-                else:
-                    result = np.concatenate((result, np.full((i, self.getk()), np.inf)), axis=0)
-            else:
-                singleXReduced = np.array(i())
-                singleXReduced = np.pad(singleXReduced, ((0, 0), (0, self.getk() - singleXReduced.shape[1])), 'constant', constant_values=np.inf)
-                if not result.size:
-                    result = singleXReduced
-                else:
-                    result = np.concatenate((result, singleXReduced), axis=0)
-        return result
+        return self.XReduced.as_matrix()
     def getk(self):
         return max([lP.getk() for lP in self.basePredictors.values()])
 
