@@ -91,6 +91,9 @@ def testRunner():
     testFuncs += [testNanInDF, testNanInDFTEST1, testNanInDFTEST2]
     testFuncs += [testConstantsGetRandomStateDefault, testConstantsGetTestSamplingRepeatsDefault, testConstantsGetLoggerNameDefault]
     testFuncs += [testConstantsGetNbThreads, testConstantsGetIncrementalFunctionFitDefault, testConstantsGetIncrementalFunctionFitSetToTrue]
+    testFuncs += [testConstantsDistDayWeightDefault, testConstantsDistDayWeightSetTo42]
+    testFuncs += [testConstantsDistStockWeightDefault, testConstantsDistStockWeightSetTo33]
+    testFuncs += [testConstantsKInKNNDefault, testConstantsKInKNNSetTo7]
     testFuncs += [testTearDown]
     testFuncs += [testGetXVectors1, testGetXVectors2]
 
@@ -127,14 +130,36 @@ def testConstantsGetIncrementalFunctionFitDefault():
 def testConstantsGetIncrementalFunctionFitSetToTrue():
     utils.Constants().incrementalFunctionFit = True
     return (utils.Constants().incrementalFunctionFit == True, 'Constant does not return the value set for incrementalFunctionFit.')
+def testConstantsDistDayWeightDefault():
+    return (utils.Constants().distDayWeight == 1, 'Default value given by Constant for distDayWeight not as expected.')
+def testConstantsDistDayWeightSetTo42():
+    utils.Constants().distDayWeight = 42
+    return (utils.Constants().distDayWeight == 42, 'Constant does not return the value set for distDayWeight.')
+def testConstantsDistStockWeightDefault():
+    return (utils.Constants().distStockWeight == 1000, 'Default value given by Constant for distStockWeight not as expected.')
+def testConstantsDistStockWeightSetTo33():
+    utils.Constants().distStockWeight = 33
+    return (utils.Constants().distStockWeight == 33, 'Constant does not return the value set for distStockWeight.')
+def testConstantsKInKNNDefault():
+    return (utils.Constants().kInKNN == 3, 'Default value given by Constant for kInKNN not as expected.')
+def testConstantsKInKNNSetTo7():
+    utils.Constants().kInKNN = 7
+    return (utils.Constants().kInKNN == 7, 'Constant does not return the value set for distStockMajWeight.')
+
 def testTearDown():
     utils.Constants().YVarianceBuckets = 22
     utils.Constants().fractionFullSampleForTest = 0.22
     utils.Constants().incrementalFunctionFit = True
+    utils.Constants().distDayWeight = 42
+    utils.Constants().distStockWeight = 33
+    utils.Constants().kInKNN = 7
     utils.Constants.tearDown()
     return ((utils.Constants().YVarianceBuckets == 10) and
             (utils.Constants().fractionFullSampleForTest == 0.1) and
-            (utils.Constants().incrementalFunctionFit == False), 
+            (utils.Constants().incrementalFunctionFit == False) and
+            (utils.Constants().distDayWeight == 1) and 
+            (utils.Constants().distStockWeight == 1000) and 
+            (utils.Constants().kInKNN == 3), 
             'Constant tear down method does lead to param reset.')
     
 def testNanInDF():

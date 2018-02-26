@@ -10,7 +10,7 @@ from sklearn.model_selection import ShuffleSplit
 HEADER_INDEX = 'Index'; HEADER_MARKET = 'Market'; HEADER_DAY = 'Day'; HEADER_STOCK = 'Stock';
 HEADER_X = ['x0', 'x1', 'x2', 'x3A', 'x3B', 'x3C', 'x3D', 'x3E', 'x4', 'x5', 'x6']
 HEADER_Y = 'y'; HEADER_WEIGHT = 'Weight'
-HEADER_Y_VARIANCE = 'yvar'; HEADER_Y_VARIANCE_GROUP = 'yvarGroup'
+HEADER_Y_VARIANCE = 'yvar'; HEADER_Y_VARIANCE_GROUP = 'yvarGroup'; HEADER_Y_UPDOWN = 'yUpDown'; HEADER_Y_MAGNITUDE = 'yMagnitude'
 HEADER_Y_REST = 'yrest'; HEADER_Y_TEST = 'ytest'; HEADER_Y_PREDICT = 'yprdct'
 
 
@@ -40,7 +40,10 @@ defaultConstantSet = {'Yvariance_buckets' : 10,
               'loggerName' : MAIN_LOGGER_NAME, 
               'testType' : TEST_TYPE_K_FOLD, 
               'nbThreads' : 4, 
-              'incrementalFunctionFit' : False}
+              'incrementalFunctionFit' : False, 
+              'distDayWeight' : 1, 
+              'distStockWeight' : 1000, 
+              'kInKNN' : 3}
 class Constants:
     class _ConstantSingle:
         def __init__(self, **kwargs):
@@ -52,8 +55,11 @@ class Constants:
             self.testType = self.getParam(kwargs,'testType')
             self.nbThreads = self.getParam(kwargs,'nbThreads')
             self.incrementalFunctionFit = self.getParam(kwargs,'incrementalFunctionFit')
+            self.distDayWeight = self.getParam(kwargs, 'distDayWeight')
+            self.distStockWeight = self.getParam(kwargs, 'distStockWeight')
+            self.kInKNN = self.getParam(kwargs, 'kInKNN')
         def __str__(self):
-             return repr(self) + self.Yvariance_buckets + self.random_state + self.FractionFullSampleForTest + self.testSamplingRepeats + self.loggerName + self.testType + self.nbThreads + self.incrementalFunctionFit
+             return repr(self) + self.Yvariance_buckets + self.random_state + self.FractionFullSampleForTest + self.testSamplingRepeats + self.loggerName + self.testType + self.nbThreads + self.incrementalFunctionFit + self.distDayWeight + self.distStockWeight + self.kInKNN
         @staticmethod
         def getParam(paramSet, paramName):
             return paramSet.get(paramName, defaultConstantSet.get(paramName))
@@ -99,6 +105,24 @@ class Constants:
     @incrementalFunctionFit.setter
     def incrementalFunctionFit(self,*args,**kwargs):
         self.instance.incrementalFunctionFit = args[0]
+    @property
+    def distDayWeight(self,*args,**kwargs):
+        return self.instance.distDayWeight
+    @distDayWeight.setter
+    def distDayWeight(self,*args,**kwargs):
+        self.instance.distDayWeight = args[0]
+    @property
+    def distStockWeight(self,*args,**kwargs):
+        return self.instance.distStockWeight
+    @distStockWeight.setter
+    def distStockWeight(self,*args,**kwargs):
+        self.instance.distStockWeight = args[0]
+    @property
+    def kInKNN(self,*args,**kwargs):
+        return self.instance.kInKNN
+    @kInKNN.setter
+    def kInKNN(self,*args,**kwargs):
+        self.instance.kInKNN = args[0]
 
 def parseFile(fileName):
     df = pd.read_csv(fileName, index_col=0)
