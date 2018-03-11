@@ -425,7 +425,7 @@ class PredictorPerSegment(mktPredictor):
     def getAvgWeightedSquareDifference(self):
         return self.avgWeightedSquareDifference
     def getX_reduced(self):
-        return self.XReduced.as_matrix()
+        return self.XReduced.loc[:, self.XReduced.columns[:self.getk()]].as_matrix()
     def getk(self):
         return max([lP.getk() for lP in self.basePredictors.values()])
 

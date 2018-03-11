@@ -84,24 +84,27 @@ def plotPCA(df):
     # display charts one by one
 
     XSet = [[(utils.HEADER_X[0], utils.LABEL_X_ORIGINAL + '0'), (utils.HEADER_X[1], utils.LABEL_X_ORIGINAL + '1')], 
+            [('x0' + utils.LABEL_ADD_RATIO, utils.LABEL_ADD_RATIO + '0'), ('x1' + utils.LABEL_ADD_RATIO, utils.LABEL_ADD_RATIO + '1')], 
             [('x0' + modStats.TYPE_LINEAR, utils.LABEL_X_LINEAR + '0'), ('x1' + modStats.TYPE_LINEAR, utils.LABEL_X_LINEAR + '1')], 
             [('x0' + modStats.TYPE_LSUM_OF_FUNCTIONS, utils.LABEL_X_LSUM_OF_FUNCTIONS + '0'), ('x1' + modStats.TYPE_LSUM_OF_FUNCTIONS, utils.LABEL_X_LSUM_OF_FUNCTIONS + '1')], 
             [('x0' + modStats.TYPE_LINEAR_PER_STCK, utils.LABEL_X_LINEAR_PER_STCK + '0'), ('x1' + modStats.TYPE_LINEAR_PER_STCK, utils.LABEL_X_LINEAR_PER_STCK + '1')], 
             [('x0' + modStats.TYPE_LSUM_OF_FUNCTIONS_PER_STCK, utils.LABEL_X_LSUM_OF_FUNCTIONS_PER_STCK + '0'), ('x1' + modStats.TYPE_LSUM_OF_FUNCTIONS_PER_STCK, utils.LABEL_X_LSUM_OF_FUNCTIONS_PER_STCK + '1')]]
 
-    colourLabel = df[utils.HEADER_Y_VARIANCE_GROUP] / 31
+    colourLabel = df[utils.HEADER_DAY] / np.max(df[utils.HEADER_DAY])
     # original problem
-    plotAllPCASetsForOneY (XSet, utils.HEADER_Y, sample, 'Y', colour = getToneLabel('Blues', colourLabel))
+    plotAllPCASetsForOneY (df, XSet, utils.HEADER_Y, sample, 'Y', colour = getToneLabel('Blues', colourLabel))
+    # original problem expressed in additive ratio
+    plotAllPCASetsForOneY (df, XSet, utils.HEADER_Y + utils.LABEL_ADD_RATIO, sample, 'Y additive ratio', colour = getToneLabel('Blues', colourLabel))
     # rest after PCA per stock
-    plotAllPCASetsForOneY (XSet, utils.HEADER_Y_REST + modStats.TYPE_LINEAR_PER_STCK, sample, 'Rest after PCA per stock', colour = getToneLabel('Reds', colourLabel))
+    plotAllPCASetsForOneY (df, XSet, utils.HEADER_Y_REST + modStats.TYPE_LINEAR_PER_STCK, sample, 'Rest after PCA per stock', colour = getToneLabel('Reds', colourLabel))
     # rest after PCA per stock
-    plotAllPCASetsForOneY (XSet, utils.HEADER_Y_REST + modStats.TYPE_LSUM_OF_FUNCTIONS_PER_STCK, sample, 'Rest after PCA per stock', colour = getToneLabel('Greens', colourLabel))
+    plotAllPCASetsForOneY (df, XSet, utils.HEADER_Y_REST + modStats.TYPE_LSUM_OF_FUNCTIONS_PER_STCK, sample, 'Rest after PCA per stock', colour = getToneLabel('Greens', colourLabel))
 
 def getToneLabel(tone, colourLabel):
     blueMap = plt.get_cmap(tone)
     return [blueMap(x) for x in colourLabel]
 
-def plotAllPCASetsForOneY(XSet, Ylabel, sample, titleHeader, colour):
+def plotAllPCASetsForOneY(df, XSet, Ylabel, sample, titleHeader, colour):
     maxGpNb = len(XSet)
     maxCol = max([len(s) for s in XSet])
 
@@ -141,7 +144,7 @@ def percentileBoundaries(vect):
 ##############################################################################################################################
 ##############################################################################################################################
 
-if __name__ == '__main__':
+def sequentialRunner():
     # main parameters
     sourceFileNumber =  1
     performPCA = False # takes time, if false the code will use saved data from a previous run
@@ -164,6 +167,10 @@ if __name__ == '__main__':
         plotPCA(df)
     
     classifiers.rateClassifiers(df)
+
+
+if __name__ == '__main__':
+    sequentialRunner()
 
 
 

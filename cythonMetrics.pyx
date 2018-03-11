@@ -55,9 +55,10 @@ cdef class TunedKNNDistDayStockX:
         self.kInKNN = kInKNN
         self.predictor = None
 
-    def fit(self, np.ndarray[np.float_t, ndim=2] X, np.ndarray[np.int64_t, ndim=1] Y):
+    cpdef fit(self, np.ndarray[np.float_t, ndim=2] X, np.ndarray[np.int64_t, ndim=1] Y):
+        # KNN with custom metrics cannot use KD tree, and defaults to Ball tree which is quite large for a large set of data and causes performance issues when queried
         self.predictor = KNeighborsClassifier(n_neighbors=self.kInKNN, metric=self.customMetrics.distDayStockX)
         self.predictor.fit(X, Y)
 
-    def predict(self, np.ndarray[np.float_t, ndim=2] X):
+    cpdef predict(self, np.ndarray[np.float_t, ndim=2] X):
         return self.predictor.predict(X)

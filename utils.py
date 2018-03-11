@@ -18,6 +18,8 @@ MAIN_LOGGER_NAME = 'mainLog'
 TEST_TYPE_K_FOLD = 'KFold'
 TEST_TYPE_REPEATED_K_FOLD = 'RepeatedKFold'
 TEST_TYPE_RANDOM = 'random'
+LABEL_ADD_RATIO = 'addRatio'
+LABEL_MUL_RATIO = 'mulRatio'
 
 
 LABEL_X_ORIGINAL = '[X]'
@@ -25,6 +27,8 @@ LABEL_X_LINEAR = '[X PCA]'
 LABEL_X_LSUM_OF_FUNCTIONS = '[LF(X) PCA]'
 LABEL_X_LINEAR_PER_STCK = '[X PCA p Stck]'
 LABEL_X_LSUM_OF_FUNCTIONS_PER_STCK = '[LF(X) PCA p Stck]'
+
+SEPARATOR = "_"
 
 ##############################################################################################################################
 ##############################################################################################################################
