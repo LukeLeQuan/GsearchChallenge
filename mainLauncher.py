@@ -150,6 +150,8 @@ def sequentialRunner():
     performPCA = False # takes time, if false the code will use saved data from a previous run
     utils.Constants().incrementalFunctionFit = True # linear sum of functions will fit functions incrementally if True, independantly if False
     plotPCAResults = False # plots few charts using PCA results
+
+    utils.Constants().testType = utils.TEST_TYPE_RANDOM
     
     # chose the file to process
     sourceFile = getSourceFile(sourceFileNumber)

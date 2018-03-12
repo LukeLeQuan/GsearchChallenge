@@ -93,7 +93,7 @@ def testRunner():
     testFuncs += [testConstantsGetNbThreads, testConstantsGetIncrementalFunctionFitDefault, testConstantsGetIncrementalFunctionFitSetToTrue]
     testFuncs += [testConstantsDistDayWeightDefault, testConstantsDistDayWeightSetTo42]
     testFuncs += [testConstantsDistStockWeightDefault, testConstantsDistStockWeightSetTo33]
-    testFuncs += [testConstantsKInKNNDefault, testConstantsKInKNNSetTo7]
+    testFuncs += [testConstantsKInKNNDefault, testConstantsKInKNNSetTo7, testConstantsTestTypeDefault, testConstantsTestTypeSetToRANDOM]
     testFuncs += [testTearDown]
     testFuncs += [testGetXVectors1, testGetXVectors2]
 
@@ -137,6 +137,14 @@ def testConstantsDistDayWeightSetTo42():
     return (utils.Constants().distDayWeight == 42, 'Constant does not return the value set for distDayWeight.')
 def testConstantsDistStockWeightDefault():
     return (utils.Constants().distStockWeight == 1000, 'Default value given by Constant for distStockWeight not as expected.')
+def testConstantsTestTypeDefault():
+    return (utils.Constants().testType == utils.TEST_TYPE_K_FOLD, 'Default value given by Constant for testType not as expected.')
+def testConstantsTestTypeSetToRANDOM():
+    utils.Constants().testType = utils.TEST_TYPE_RANDOM
+    return (utils.Constants().testType == utils.TEST_TYPE_RANDOM, 'Constant does not return the value set for testType.')
+
+
+
 def testConstantsDistStockWeightSetTo33():
     utils.Constants().distStockWeight = 33
     return (utils.Constants().distStockWeight == 33, 'Constant does not return the value set for distStockWeight.')

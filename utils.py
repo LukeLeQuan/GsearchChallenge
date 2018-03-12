@@ -100,6 +100,9 @@ class Constants:
     @property
     def testType(self,*args,**kwargs):
         return self.instance.testType
+    @testType.setter
+    def testType(self,*args,**kwargs):
+        self.instance.testType = args[0]
     @property
     def nbThreads(self,*args,**kwargs):
         return self.instance.nbThreads
