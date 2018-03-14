@@ -18,7 +18,7 @@ MAIN_LOGGER_NAME = 'mainLog'
 TEST_TYPE_K_FOLD = 'KFold'
 TEST_TYPE_REPEATED_K_FOLD = 'RepeatedKFold'
 TEST_TYPE_RANDOM = 'random'
-LABEL_ADD_RATIO = 'addRatio'
+LABEL_INCREMENTS = 'increments'
 LABEL_MUL_RATIO = 'mulRatio'
 
 
@@ -38,7 +38,7 @@ SEPARATOR = "_"
 
 # Singleton/SingletonPattern
 defaultConstantSet = {'Yvariance_buckets' : 10, 
-              'random_state' : 12883823, 
+              'randomState' : 12883823, 
               'FractionFullSampleForTest' : 0.1, 
               'testSamplingRepeats' : 20, 
               'loggerName' : MAIN_LOGGER_NAME, 
@@ -52,7 +52,7 @@ class Constants:
     class _ConstantSingle:
         def __init__(self, **kwargs):
             self.Yvariance_buckets = self.getParam(kwargs,'Yvariance_buckets')
-            self.random_state = self.getParam(kwargs,'random_state')
+            self.randomState = self.getParam(kwargs,'randomState')
             self.FractionFullSampleForTest = self.getParam(kwargs,'FractionFullSampleForTest') # set to 10 equivalent to train on 90% of the data and tes on 10%
             self.testSamplingRepeats = self.getParam(kwargs,'testSamplingRepeats') # number of random partitions generated
             self.loggerName = self.getParam(kwargs,'loggerName') # name used as unique identifier for the logger
@@ -63,7 +63,7 @@ class Constants:
             self.distStockWeight = self.getParam(kwargs, 'distStockWeight')
             self.kInKNN = self.getParam(kwargs, 'kInKNN')
         def __str__(self):
-             return repr(self) + self.Yvariance_buckets + self.random_state + self.FractionFullSampleForTest + self.testSamplingRepeats + self.loggerName + self.testType + self.nbThreads + self.incrementalFunctionFit + self.distDayWeight + self.distStockWeight + self.kInKNN
+             return repr(self) + self.Yvariance_buckets + self.randomState + self.FractionFullSampleForTest + self.testSamplingRepeats + self.loggerName + self.testType + self.nbThreads + self.incrementalFunctionFit + self.distDayWeight + self.distStockWeight + self.kInKNN
         @staticmethod
         def getParam(paramSet, paramName):
             return paramSet.get(paramName, defaultConstantSet.get(paramName))
@@ -84,7 +84,7 @@ class Constants:
         self.instance.Yvariance_buckets = args[0]
     @property
     def randomState(self,*args,**kwargs):
-        return self.instance.random_state
+        return self.instance.randomState
     @property
     def fractionFullSampleForTest(self,*args,**kwargs):
         return self.instance.FractionFullSampleForTest
@@ -144,17 +144,17 @@ def getXVectors(columns, regressionType):
     return [x for x in columns if (x[-l:] == regressionType) and (str.lower(x[0]) == 'x')]
 
 def getTestAndTrainSample():
-    random_state = Constants().randomState
+    randomState = Constants().randomState
     fraction = Constants().fractionFullSampleForTest
     repeats = Constants().testSamplingRepeats
     testType = Constants().testType
 
     if testType == TEST_TYPE_K_FOLD:
-        return KFold(n_splits=int(1 / fraction), random_state=random_state)
+        return KFold(n_splits=int(1 / fraction), randomState=randomState)
     if testType == TEST_TYPE_REPEATED_K_FOLD:
-        return RepeatedKFold(n_splits=int(1 / fraction), n_repeats=repeats, random_state=random_state)
+        return RepeatedKFold(n_splits=int(1 / fraction), n_repeats=repeats, randomState=randomState)
     if testType == TEST_TYPE_RANDOM:
-        return ShuffleSplit(n_splits=repeats, test_size=.25, random_state=random_state)
+        return ShuffleSplit(n_splits=repeats, test_size=fraction, randomState=randomState)
 
 def getShapesToPlot(i : int):
     # 'o' removed to keep it for special display

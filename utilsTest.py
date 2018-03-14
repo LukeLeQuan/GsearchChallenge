@@ -118,7 +118,7 @@ def testConstantsGetFractionFullSampleForTestSetTo22():
     utils.Constants().fractionFullSampleForTest = 0.22
     return (utils.Constants().fractionFullSampleForTest == 0.22, 'Constant does not return the value set for FractionFullSampleForTest.')
 def testConstantsGetRandomStateDefault():
-    return (utils.Constants().randomState == 12883823, 'Default value given by Constant for random_state not as expected.')
+    return (utils.Constants().randomState == 12883823, 'Default value given by Constant for randomState not as expected.')
 def testConstantsGetTestSamplingRepeatsDefault():
     return (utils.Constants().testSamplingRepeats == 20, 'Default value given by Constant for testSamplingRepeats not as expected.')
 def testConstantsGetLoggerNameDefault():

@@ -152,6 +152,8 @@ def sequentialRunner():
     plotPCAResults = False # plots few charts using PCA results
 
     utils.Constants().testType = utils.TEST_TYPE_RANDOM
+    utils.Constants().randomState = 12883823
+    utils.Constants().fractionFullSampleForTest = 0.5
     
     # chose the file to process
     sourceFile = getSourceFile(sourceFileNumber)

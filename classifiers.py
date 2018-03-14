@@ -28,16 +28,16 @@ def rateClassifiers(df):
 #    rateCustomKNN(df, ratings)
 #    print(time() - start, '\n'.join([x + ' : ' + str(ratings[x]) for x in ratings.keys()]))
     rateDefaultLogisticRegression(df, ratings)
-    print(time() - start, '\n'.join([x + ' : ' + str(ratings[x]) for x in ratings.keys()]))
+    print(time() - start)
+    print ('\n'.join([x + utils.SEPARATOR + str(ratings[x][0]) + utils.SEPARATOR + str(ratings[x][1]) for x in ratings.keys()]))
 
 def rateDecisionTree(df, ratings):
     """
     Decision tree to predict discretised movement _ using each stock's variance
     Gives an intuition of Y and features that work the best
     """
-    rateVarianceGroup(df, ratings, tree.DecisionTreeClassifier)
-    rateUpDownGroup(df, ratings, tree.DecisionTreeClassifier)
-    rateMoveMagnitudeGroup(df, ratings, tree.DecisionTreeClassifier)
+    rateOriginalY(df, ratings, tree.DecisionTreeClassifier)
+    rateYIncrements(df, ratings, tree.DecisionTreeClassifier)
     rateAllRests(df, ratings, tree.DecisionTreeClassifier)
 
 def rateDefaultKNN(df, ratings):
@@ -46,9 +46,10 @@ def rateDefaultKNN(df, ratings):
     K can be set to improve results _ turns up increasing K affects performance significantly with little improvement on the score
     """
     classifierCreator = makeKNeighborsClassifier(utils.Constants().kInKNN)
-    rateVarianceGroup(df, ratings, classifierCreator)
-    rateUpDownGroup(df, ratings, classifierCreator)
-    rateMoveMagnitudeGroup(df, ratings, classifierCreator)
+    rateOriginalY(df, ratings, classifierCreator)
+    rateYIncrements(df, ratings, classifierCreator)
+    rateAllRests(df, ratings, classifierCreator)
+    rateYIncrements(df, ratings, classifierCreator)
     rateAllRests(df, ratings, classifierCreator)
 
 def rateCustomKNN(df, ratings):
@@ -61,49 +62,44 @@ def rateCustomKNN(df, ratings):
     utils.Constants().distDayWeight = 0
     utils.Constants().distStockWeight = 0
     utils.Constants().kInKNN = 10
-    rateVarianceGroup(df, ratings, getTunedKNNDistDayStockX)
+    rateOriginalY(df, ratings, getTunedKNNDistDayStockX)
 
 def rateDefaultLogisticRegression(df, ratings):
     """
     Using the standard LogisticRegression to predict discretised movement _ using each stock's variance _ 
     Penalty is added for regularization purpose
     """
-    for c in [0.1]: # [0.01, 0.5, 1]:
-        classifierCreator = makeLogisticRegressionClassifier(True, c)
-        rateVarianceGroup(df, ratings, classifierCreator)
-        rateUpDownGroup(df, ratings, classifierCreator)
-        rateMoveMagnitudeGroup(df, ratings, classifierCreator)
+    # l1 and l2 seems to give fairly similar scores l1 only will be used to improve calculation time
+    isPenaltyL1 = True
+    for c in [0.1]: 
+        classifierCreator = makeLogisticRegressionClassifier(isPenaltyL1, c)
+        rateOriginalY(df, ratings, classifierCreator)
+        rateYIncrements(df, ratings, classifierCreator)
         rateAllRests(df, ratings, classifierCreator)
-        print ('\n'.join([x + utils.SEPARATOR + str(ratings[x][0]) + utils.SEPARATOR + str(ratings[x][1]) for x in ratings.keys()]))
-        classifierCreator = makeLogisticRegressionClassifier(False, c)
-        rateVarianceGroup(df, ratings, classifierCreator)
-        rateUpDownGroup(df, ratings, classifierCreator)
-        rateMoveMagnitudeGroup(df, ratings, classifierCreator)
-        rateAllRests(df, ratings, classifierCreator)
-        print ('\n'.join([x + utils.SEPARATOR + str(ratings[x][0]) + utils.SEPARATOR + str(ratings[x][1]) for x in ratings.keys()]))
 
-def rateVarianceGroup(df, ratings, classifier):
-    """
-    Assess Y and additive ratios of Y discretized based on stock level standard deviation
-    """
-    rateGroup(df, ratings, classifier, utils.HEADER_Y_VARIANCE_GROUP, [utils.HEADER_DAY])
-    rateGroup(df, ratings, classifier, utils.HEADER_Y_VARIANCE_GROUP + utils.LABEL_ADD_RATIO, [utils.HEADER_DAY])
+def rateOriginalY(df, ratings, classifier):
+    rateYFromFile(df, ratings, classifier, utils.HEADER_Y_VARIANCE_GROUP, '')
 
-def rateUpDownGroup(df, ratings, classifier):
+def rateYIncrements(df, ratings, classifier):
+    rateYFromFile(df, ratings, classifier, utils.HEADER_Y_VARIANCE_GROUP + utils.LABEL_INCREMENTS, utils.LABEL_INCREMENTS)
+
+def rateYFromFile(df, ratings, classifier, Ylabel, labelSuffix):
     """
-    Assess sign of Y and additive ratios of Y
+    Assess any columns in the csv file in three ways:
+        * discretized based on Y's standard deviation at stock level
+        * sign
+        * absolute discretized change
     """
-    classificationLabel = utils.HEADER_Y_UPDOWN + utils.LABEL_ADD_RATIO
-    df[classificationLabel] = np.sign(df[utils.HEADER_Y_VARIANCE_GROUP + utils.LABEL_ADD_RATIO])
+    # variance groups
+    rateGroup(df, ratings, classifier, Ylabel, [utils.HEADER_DAY])
+    # sign
+    classificationLabel = utils.HEADER_Y_UPDOWN + labelSuffix
+    df[classificationLabel] = np.sign(df[Ylabel])
     rateGroup(df, ratings, classifier, classificationLabel, [utils.HEADER_DAY])
-
-def rateMoveMagnitudeGroup(df, ratings, classifier):
-    """
-    Assess absolute move of Y and additive ratios of Y
-    """
-    classificationLabel = utils.HEADER_Y_MAGNITUDE + utils.LABEL_ADD_RATIO
+    # magnitude
+    classificationLabel = utils.HEADER_Y_MAGNITUDE + labelSuffix
     nbVarianceBuckets = utils.Constants().YVarianceBuckets
-    df[classificationLabel] = df[utils.HEADER_Y_VARIANCE_GROUP + utils.LABEL_ADD_RATIO].apply(lambda x : abs(x // nbVarianceBuckets))
+    df[classificationLabel] = df[Ylabel].apply(lambda x : abs(x // nbVarianceBuckets))
     rateGroup(df, ratings, classifier, classificationLabel, [utils.HEADER_DAY])
 
 def rateAllRests(df, ratings, classifier):
@@ -111,7 +107,10 @@ def rateAllRests(df, ratings, classifier):
     Assess (Y - predict) for predict coming on linear regression of Xs or F(X)s
     """
     rateRest(df, ratings, classifier, modStats.TYPE_LINEAR_PER_STCK)
-    rateRest(df, ratings, classifier, modStats.TYPE_LSUM_OF_FUNCTIONS_PER_STCK)
+    # commented out as it gives worst results than linear per stock and makes less sense:
+    # the same function should be applied to the whole feature instead of function fitting per stock
+    # if it could make some sense in term of classic regression, it does not for classification features in the general case
+#    rateRest(df, ratings, classifier, modStats.TYPE_LSUM_OF_FUNCTIONS_PER_STCK)
 
 def rateRest(df, ratings, classifier, restType):
     """
@@ -120,12 +119,15 @@ def rateRest(df, ratings, classifier, restType):
         * sign
         * absolute discretized change
     """
+    # variance groups
     classificationLabelRest = utils.HEADER_Y_VARIANCE_GROUP + restType
     df[classificationLabelRest] = np.maximum(np.minimum(np.round(np.divide(df[utils.HEADER_Y_REST + restType], df[utils.HEADER_Y_VARIANCE])), 5), -5)
     rateGroup(df, ratings, classifier, classificationLabelRest, [utils.HEADER_DAY])
+    # sign
     classificationLabelUpDown = utils.HEADER_Y_UPDOWN + restType
     df[classificationLabelUpDown] = np.sign(df[utils.HEADER_Y_REST + restType])
     rateGroup(df, ratings, classifier, classificationLabelUpDown, [utils.HEADER_DAY])
+    # magnitude
     classificationLabelMagnitude = utils.HEADER_Y_MAGNITUDE + restType
     df[classificationLabelMagnitude] = np.multiply(df[classificationLabelRest], df[classificationLabelUpDown])
     rateGroup(df, ratings, classifier, classificationLabelMagnitude, [utils.HEADER_DAY])
@@ -135,11 +137,12 @@ def rateGroup(df, ratings, classifier, classificationLabel, additionalParameters
     for any given target label vector and given classifier, fits the classifier based on 
     """
     ratings[createGroupName(classifier.__name__, classificationLabel, utils.LABEL_X_ORIGINAL, utils.Constants().distDayWeight) ] = rateClassifier(df, additionalParameters + utils.HEADER_X, [(utils.HEADER_DAY, utils.Constants().distDayWeight)] + [(x, 1) for x in utils.HEADER_X], classificationLabel, classifier)
-    ratings[createGroupName(classifier.__name__, classificationLabel, utils.LABEL_X_ORIGINAL + utils.LABEL_ADD_RATIO, utils.Constants().distDayWeight) ] = rateClassifier(df, additionalParameters + [x + utils.LABEL_ADD_RATIO for x in utils.HEADER_X], [(utils.HEADER_DAY, utils.Constants().distDayWeight)] + [(x + utils.LABEL_ADD_RATIO, 1) for x in utils.HEADER_X], classificationLabel, classifier)
     ratings[createGroupName(classifier.__name__, classificationLabel, utils.LABEL_X_LINEAR, utils.Constants().distDayWeight)] = rateClassifier(df, additionalParameters + utils.getXVectors(df.columns.values, modStats.TYPE_LINEAR), [(utils.HEADER_DAY, utils.Constants().distDayWeight)], classificationLabel, classifier)
-    ratings[createGroupName(classifier.__name__, classificationLabel, utils.LABEL_X_LSUM_OF_FUNCTIONS, utils.Constants().distDayWeight)] = rateClassifier(df, additionalParameters + utils.getXVectors(df.columns.values, modStats.TYPE_LSUM_OF_FUNCTIONS), [(utils.HEADER_DAY, utils.Constants().distDayWeight)], classificationLabel, classifier)
-    ratings[createGroupName(classifier.__name__, classificationLabel, utils.LABEL_X_LINEAR_PER_STCK, utils.Constants().distDayWeight)] = rateClassifier(df, additionalParameters + utils.getXVectors(df.columns.values, modStats.TYPE_LINEAR_PER_STCK), [(utils.HEADER_DAY, utils.Constants().distDayWeight)], classificationLabel, classifier)
-    ratings[createGroupName(classifier.__name__, classificationLabel, utils.LABEL_X_LSUM_OF_FUNCTIONS_PER_STCK, utils.Constants().distDayWeight)] = rateClassifier(df, additionalParameters + utils.getXVectors(df.columns.values, modStats.TYPE_LSUM_OF_FUNCTIONS_PER_STCK), [(utils.HEADER_DAY, utils.Constants().distDayWeight)], classificationLabel, classifier)
+    # other sets of features commented as they do not improve the results but are less traightforward to interprete
+#    ratings[createGroupName(classifier.__name__, classificationLabel, utils.LABEL_X_ORIGINAL + utils.LABEL_INCREMENTS, utils.Constants().distDayWeight) ] = rateClassifier(df, additionalParameters + [x + utils.LABEL_INCREMENTS for x in utils.HEADER_X], [(utils.HEADER_DAY, utils.Constants().distDayWeight)] + [(x + utils.LABEL_INCREMENTS, 1) for x in utils.HEADER_X], classificationLabel, classifier)
+#    ratings[createGroupName(classifier.__name__, classificationLabel, utils.LABEL_X_LSUM_OF_FUNCTIONS, utils.Constants().distDayWeight)] = rateClassifier(df, additionalParameters + utils.getXVectors(df.columns.values, modStats.TYPE_LSUM_OF_FUNCTIONS), [(utils.HEADER_DAY, utils.Constants().distDayWeight)], classificationLabel, classifier)
+#    ratings[createGroupName(classifier.__name__, classificationLabel, utils.LABEL_X_LINEAR_PER_STCK, utils.Constants().distDayWeight)] = rateClassifier(df, additionalParameters + utils.getXVectors(df.columns.values, modStats.TYPE_LINEAR_PER_STCK), [(utils.HEADER_DAY, utils.Constants().distDayWeight)], classificationLabel, classifier)
+#    ratings[createGroupName(classifier.__name__, classificationLabel, utils.LABEL_X_LSUM_OF_FUNCTIONS_PER_STCK, utils.Constants().distDayWeight)] = rateClassifier(df, additionalParameters + utils.getXVectors(df.columns.values, modStats.TYPE_LSUM_OF_FUNCTIONS_PER_STCK), [(utils.HEADER_DAY, utils.Constants().distDayWeight)], classificationLabel, classifier)
 
 def createGroupName(classifierName, classificationLabel, featuresLabel, kDays):
     return classifierName + utils.SEPARATOR + classificationLabel + utils.SEPARATOR + utils.SEPARATOR + featuresLabel + utils.SEPARATOR + str(kDays)
