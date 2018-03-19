@@ -86,10 +86,11 @@ def testFromRawFile(sourceFileTrain):
 ##############################################################################################################################
 def testRunner():
     testFuncs = []
-    testFuncs += [testConstantsGetYVarianceBucketsDefault, testConstantsSetYVarianceBucketsSetTo22]
+    testFuncs += [testConstantsGetYVarianceBucketsDefault, testConstantsSetYVarianceBucketsSetTo22, testConstantsSetYVarianceBucketsSetTo21]
     testFuncs += [testConstantsGetFractionFullSampleForTestDefault, testConstantsGetFractionFullSampleForTestSetTo22]
+    testFuncs += [testConstantsGetNbBucketsPerVarianceUnitDefault, testConstantsSetNbBucketsPerVarianceUnitSetTo22]
     testFuncs += [testNanInDF, testNanInDFTEST1, testNanInDFTEST2]
-    testFuncs += [testConstantsGetRandomStateDefault, testConstantsGetTestSamplingRepeatsDefault, testConstantsGetLoggerNameDefault]
+    testFuncs += [testConstantsGetRandomStateDefault, testConstantstRandomStateSetTo42, testConstantsGetTestSamplingRepeatsDefault, testConstantsGetLoggerNameDefault]
     testFuncs += [testConstantsGetNbThreads, testConstantsGetIncrementalFunctionFitDefault, testConstantsGetIncrementalFunctionFitSetToTrue]
     testFuncs += [testConstantsDistDayWeightDefault, testConstantsDistDayWeightSetTo42]
     testFuncs += [testConstantsDistStockWeightDefault, testConstantsDistStockWeightSetTo33]
@@ -108,10 +109,19 @@ def testRunner():
         print('All gooooooooooooooooooooood !')
 
 def testConstantsGetYVarianceBucketsDefault():
-    return (utils.Constants().YVarianceBuckets == 10, 'Default value given by Constant for Yvariance_buckets not as expected.')
-def testConstantsSetYVarianceBucketsSetTo22():
-    utils.Constants().YVarianceBuckets = 22
-    return (utils.Constants().YVarianceBuckets == 22, 'Constant does not return the value set for Yvariance_buckets.')
+    return (utils.Constants().YVarianceBuckets == 22, 'Default value given by Constant for YVarianceBuckets not as expected.')
+def testConstantsSetYVarianceBucketsSetTo42():
+    utils.Constants().YVarianceBuckets = 42
+    return (utils.Constants().YVarianceBuckets == 42, 'Constant does not return the value set for YVarianceBuckets.')
+def testConstantsSetYVarianceBucketsSetTo21():
+    previousValue = utils.Constants().YVarianceBuckets
+    utils.Constants().YVarianceBuckets = 21
+    return (utils.Constants().YVarianceBuckets == previousValue, 'Setting odd number for YVarianceBuckets should leave it at previous value.')
+def testConstantsGetNbBucketsPerVarianceUnitDefault():
+    return (utils.Constants().nbBucketsPerVarianceUnit == 4, 'Default value given by Constant for nbBucketsPerVarianceUnit not as expected.')
+def testConstantsSetNbBucketsPerVarianceUnitSetTo22():
+    utils.Constants().nbBucketsPerVarianceUnit = 22
+    return (utils.Constants().nbBucketsPerVarianceUnit == 22, 'Constant does not return the value set for nbBucketsPerVarianceUnit.')
 def testConstantsGetFractionFullSampleForTestDefault():
     return (utils.Constants().fractionFullSampleForTest == 0.1, 'Default value given by Constant for FractionFullSampleForTest not as expected.')
 def testConstantsGetFractionFullSampleForTestSetTo22():
@@ -119,6 +129,9 @@ def testConstantsGetFractionFullSampleForTestSetTo22():
     return (utils.Constants().fractionFullSampleForTest == 0.22, 'Constant does not return the value set for FractionFullSampleForTest.')
 def testConstantsGetRandomStateDefault():
     return (utils.Constants().randomState == 12883823, 'Default value given by Constant for randomState not as expected.')
+def testConstantstRandomStateSetTo42():
+    utils.Constants().randomState = 42
+    return (utils.Constants().randomState == 42, 'Constant does not return the value set for randomState.')
 def testConstantsGetTestSamplingRepeatsDefault():
     return (utils.Constants().testSamplingRepeats == 20, 'Default value given by Constant for testSamplingRepeats not as expected.')
 def testConstantsGetLoggerNameDefault():
@@ -142,9 +155,6 @@ def testConstantsTestTypeDefault():
 def testConstantsTestTypeSetToRANDOM():
     utils.Constants().testType = utils.TEST_TYPE_RANDOM
     return (utils.Constants().testType == utils.TEST_TYPE_RANDOM, 'Constant does not return the value set for testType.')
-
-
-
 def testConstantsDistStockWeightSetTo33():
     utils.Constants().distStockWeight = 33
     return (utils.Constants().distStockWeight == 33, 'Constant does not return the value set for distStockWeight.')
@@ -155,17 +165,21 @@ def testConstantsKInKNNSetTo7():
     return (utils.Constants().kInKNN == 7, 'Constant does not return the value set for distStockMajWeight.')
 
 def testTearDown():
-    utils.Constants().YVarianceBuckets = 22
+    utils.Constants().YVarianceBuckets = 42
     utils.Constants().fractionFullSampleForTest = 0.22
+    utils.Constants().randomState == 42
     utils.Constants().incrementalFunctionFit = True
     utils.Constants().distDayWeight = 42
+    utils.Constants().testType == utils.TEST_TYPE_RANDOM
     utils.Constants().distStockWeight = 33
     utils.Constants().kInKNN = 7
     utils.Constants.tearDown()
-    return ((utils.Constants().YVarianceBuckets == 10) and
+    return ((utils.Constants().YVarianceBuckets == 22) and
             (utils.Constants().fractionFullSampleForTest == 0.1) and
+            (utils.Constants().randomState == 12883823) and
             (utils.Constants().incrementalFunctionFit == False) and
-            (utils.Constants().distDayWeight == 1) and 
+            (utils.Constants().distDayWeight == 1) and
+            (utils.Constants().testType == utils.TEST_TYPE_K_FOLD) and
             (utils.Constants().distStockWeight == 1000) and 
             (utils.Constants().kInKNN == 3), 
             'Constant tear down method does lead to param reset.')

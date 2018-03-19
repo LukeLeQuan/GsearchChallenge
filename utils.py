@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import logging
 
 from sklearn.model_selection import KFold
 from sklearn.model_selection import RepeatedKFold
@@ -20,6 +21,8 @@ TEST_TYPE_REPEATED_K_FOLD = 'RepeatedKFold'
 TEST_TYPE_RANDOM = 'random'
 LABEL_INCREMENTS = 'increments'
 LABEL_MUL_RATIO = 'mulRatio'
+LABEL_AVG_TREND = 'avgTrend'
+LABEL_AVG_MEDIAN = 'avgMedian'
 
 
 LABEL_X_ORIGINAL = '[X]'
@@ -37,9 +40,10 @@ SEPARATOR = "_"
 ##############################################################################################################################
 
 # Singleton/SingletonPattern
-defaultConstantSet = {'Yvariance_buckets' : 10, 
+defaultConstantSet = {'YVarianceBuckets' : 22, 
+              'nbBucketsPerVarianceUnit' : 4, 
               'randomState' : 12883823, 
-              'FractionFullSampleForTest' : 0.1, 
+              'fractionFullSampleForTest' : 0.1, 
               'testSamplingRepeats' : 20, 
               'loggerName' : MAIN_LOGGER_NAME, 
               'testType' : TEST_TYPE_K_FOLD, 
@@ -51,9 +55,10 @@ defaultConstantSet = {'Yvariance_buckets' : 10,
 class Constants:
     class _ConstantSingle:
         def __init__(self, **kwargs):
-            self.Yvariance_buckets = self.getParam(kwargs,'Yvariance_buckets')
+            self.YVarianceBuckets = self.getParam(kwargs,'YVarianceBuckets')
+            self.nbBucketsPerVarianceUnit = self.getParam(kwargs,'nbBucketsPerVarianceUnit')
             self.randomState = self.getParam(kwargs,'randomState')
-            self.FractionFullSampleForTest = self.getParam(kwargs,'FractionFullSampleForTest') # set to 10 equivalent to train on 90% of the data and tes on 10%
+            self.FractionFullSampleForTest = self.getParam(kwargs,'fractionFullSampleForTest') # set to 10 equivalent to train on 90% of the data and tes on 10%
             self.testSamplingRepeats = self.getParam(kwargs,'testSamplingRepeats') # number of random partitions generated
             self.loggerName = self.getParam(kwargs,'loggerName') # name used as unique identifier for the logger
             self.testType = self.getParam(kwargs,'testType')
@@ -63,7 +68,7 @@ class Constants:
             self.distStockWeight = self.getParam(kwargs, 'distStockWeight')
             self.kInKNN = self.getParam(kwargs, 'kInKNN')
         def __str__(self):
-             return repr(self) + self.Yvariance_buckets + self.randomState + self.FractionFullSampleForTest + self.testSamplingRepeats + self.loggerName + self.testType + self.nbThreads + self.incrementalFunctionFit + self.distDayWeight + self.distStockWeight + self.kInKNN
+             return repr(self) + self.YVarianceBuckets + self.nbBucketsPerVarianceUnit + self.randomState + self.FractionFullSampleForTest + self.testSamplingRepeats + self.loggerName + self.testType + self.nbThreads + self.incrementalFunctionFit + self.distDayWeight + self.distStockWeight + self.kInKNN
         @staticmethod
         def getParam(paramSet, paramName):
             return paramSet.get(paramName, defaultConstantSet.get(paramName))
@@ -78,13 +83,25 @@ class Constants:
 
     @property
     def YVarianceBuckets(self,*args,**kwargs):
-        return self.instance.Yvariance_buckets
+        return self.instance.YVarianceBuckets
     @YVarianceBuckets.setter
     def YVarianceBuckets(self,*args,**kwargs):
-        self.instance.Yvariance_buckets = args[0]
+        if args[0] % 2 == 0:
+            self.instance.YVarianceBuckets = args[0]
+        else:
+            logging.getLogger(Constants().loggerName).log(logging.INFO, 'Cannot set YVarianceBuckets to odd number!')
+    @property
+    def nbBucketsPerVarianceUnit(self,*args,**kwargs):
+        return self.instance.nbBucketsPerVarianceUnit
+    @nbBucketsPerVarianceUnit.setter
+    def nbBucketsPerVarianceUnit(self,*args,**kwargs):
+        self.instance.nbBucketsPerVarianceUnit = args[0]
     @property
     def randomState(self,*args,**kwargs):
         return self.instance.randomState
+    @randomState.setter
+    def randomState(self,*args,**kwargs):
+        self.instance.randomState = args[0]
     @property
     def fractionFullSampleForTest(self,*args,**kwargs):
         return self.instance.FractionFullSampleForTest
@@ -154,7 +171,7 @@ def getTestAndTrainSample():
     if testType == TEST_TYPE_REPEATED_K_FOLD:
         return RepeatedKFold(n_splits=int(1 / fraction), n_repeats=repeats, randomState=randomState)
     if testType == TEST_TYPE_RANDOM:
-        return ShuffleSplit(n_splits=repeats, test_size=fraction, randomState=randomState)
+        return ShuffleSplit(n_splits=repeats, test_size=fraction, random_state =randomState)
 
 def getShapesToPlot(i : int):
     # 'o' removed to keep it for special display
@@ -163,15 +180,3 @@ def getShapesToPlot(i : int):
 
 def testNanInDF(df, headers):
     return df.replace([np.inf, -np.inf], np.nan).query(''.join(['(' + x + ' != ' + x + ') | ' for x in headers ])[:-2])
-
-def addYVarianceGroups(df, Ylabel, groupHeaders, YvarLabel, YvarGroupLabel):
-    grouped = df.groupby(groupHeaders)
-    df[YvarLabel] = 0
-    df[YvarGroupLabel] = 0
-    for name, subdf in grouped:
-        subsetVariance = subdf[Ylabel].std()
-        # for each value of Y, expresses it relatively to the variance
-        # the value will be allocated to one of (4 k + 2) buckets where k is set using 'get_Yvariance_buckets'
-        # range [0; sigma], [sigma; 2 sigma], [2 sigma; 3 sigma] and their opposite are divided in k, the rest goes in two other buckets
-        df.loc[subdf[Ylabel].index,YvarGroupLabel] = subdf[Ylabel].apply(lambda x : np.sign(x) * min(abs(x) // (subsetVariance / Constants().YVarianceBuckets), 3 * Constants().YVarianceBuckets + 1))
-        df.loc[subdf[Ylabel].index,YvarLabel] = subsetVariance

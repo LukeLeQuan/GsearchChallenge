@@ -47,10 +47,8 @@ def processRawFileWithLinearRegressions(sourceFile, targetFile, fractionFullSamp
     df = utils.parseFile(sourceFile)
 
     if steps == None:
-        steps = [1, 2, 3, 4]
+        steps = [1, 2, 3, 4] 
 
-    # add discretised variance in df
-    utils.addYVarianceGroups(df, utils.HEADER_Y, utils.HEADER_STOCK, utils.HEADER_Y_VARIANCE, utils.HEADER_Y_VARIANCE_GROUP)
     if 1 in steps:
         # simple PCA on the whole serie
         coeffDetermin, df = modStats.mktPredictor.addRegressionData(modStats.TYPE_LINEAR, df, addRegressionVectors = True, addRest = False)
@@ -152,8 +150,8 @@ def sequentialRunner():
     plotPCAResults = False # plots few charts using PCA results
 
     utils.Constants().testType = utils.TEST_TYPE_RANDOM
-    utils.Constants().randomState = 12883823
     utils.Constants().fractionFullSampleForTest = 0.5
+    utils.Constants().YVarianceBuckets = 14
     
     # chose the file to process
     sourceFile = getSourceFile(sourceFileNumber)
@@ -162,7 +160,7 @@ def sequentialRunner():
     # gets X values post PCA and prediction for all Ys
     if performPCA:
         # calls PCA / linear regression formula to prepare different sets of X0 to process and the prediction for each method
-        df = processRawFileWithLinearRegressions(sourceFile, postLinearRegressionProcessingFile, steps = [1, 2, 3, 4])
+        df = processRawFileWithLinearRegressions(sourceFile, postLinearRegressionProcessingFile, steps = [1, 2, 3]) #  [1, 2, 3, 4]) step 4 takes time and proved not to work too well
     else:
         # recalls the last file saved post PCA
         df = utils.parseFile(postLinearRegressionProcessingFile)

@@ -65,6 +65,15 @@ class ArrayFunctions():
     @staticmethod
     def isRatio(func):
         return func.__name__[-5:] == 'Ratio'
+    @staticmethod
+    def assignVarianceBasedGroup(x, xVar, nbVarianceBuckets, nbBucketsPerVarianceUnit):
+        nbFullBuckets = nbVarianceBuckets // (nbBucketsPerVarianceUnit * 2)
+        maxNbVar= (nbVarianceBuckets // 2 ) - nbFullBuckets * nbBucketsPerVarianceUnit + nbFullBuckets - 1
+        bins = [x for x in range(- maxNbVar, - nbFullBuckets)]
+        bins += [x / nbBucketsPerVarianceUnit for x in range(- nbFullBuckets * nbBucketsPerVarianceUnit, nbFullBuckets * nbBucketsPerVarianceUnit)]
+        bins += [x for x in range(nbFullBuckets, maxNbVar + 1)]
+
+        return np.digitize(np.divide(x, xVar / nbBucketsPerVarianceUnit), bins) - (nbVarianceBuckets // 2)
 
 # virtual class packaging different predictors
 class mktPredictor:
